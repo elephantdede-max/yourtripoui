@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import type { LangCode } from '../lib/i18n';
-import { t } from '../lib/i18n';
+import { useLang } from '../lib/lang-context';
 
 interface Props {
   lang: LangCode;
@@ -9,7 +9,8 @@ interface Props {
   onClose: () => void;
 }
 
-export default function FeedbackModal({ lang, onSubmit, onClose }: Props) {
+export default function FeedbackModal({ onSubmit, onClose }: Props) {
+  const { t } = useLang();
   const [stars, setStars] = useState(0);
   const [comment, setComment] = useState('');
 
@@ -28,13 +29,13 @@ export default function FeedbackModal({ lang, onSubmit, onClose }: Props) {
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold">{t('your_opinion', lang)}</h3>
+          <h3 className="text-base font-semibold">{t('your_opinion')}</h3>
           <button onClick={onClose} className="text-muted hover:text-ink transition-colors">
             <X size={18} />
           </button>
         </div>
         <p className="text-sm text-muted mb-5">
-          {t('how_was', lang)}
+          {t('how_was')}
         </p>
 
         <div className="flex gap-3 justify-center mb-5">
@@ -55,7 +56,7 @@ export default function FeedbackModal({ lang, onSubmit, onClose }: Props) {
           value={comment}
           onChange={e => setComment(e.target.value)}
           rows={2}
-          placeholder={t('feedback_placeholder', lang)}
+          placeholder={t('feedback_placeholder')}
           className="w-full px-3 py-2.5 border border-subtle rounded-md bg-surface text-ink text-sm leading-relaxed resize-none focus:outline-none focus:border-ink/40 transition-colors placeholder:text-muted/50 mb-4"
         />
 
@@ -63,13 +64,13 @@ export default function FeedbackModal({ lang, onSubmit, onClose }: Props) {
           onClick={handleSubmit}
           className="w-full py-3 bg-ink text-white font-medium rounded-lg transition-all hover:bg-ink/90"
         >
-          {t('send', lang)}
+          {t('send')}
         </button>
         <button
           onClick={onClose}
           className="w-full py-2.5 mt-2 text-sm text-muted hover:text-ink transition-colors"
         >
-          {t('later', lang)}
+          {t('later')}
         </button>
       </div>
     </div>

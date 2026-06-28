@@ -1,21 +1,21 @@
 import { useState } from 'react';
 import { X, Search } from 'lucide-react';
 import type { LangCode } from '../lib/i18n';
-import { t } from '../lib/i18n';
+import { useLang } from '../lib/lang-context';
 
-// --- NOS DESSINS SVG EN NOIR ET OR (VERSION PRO & ÉPURÉE) ---
+// --- DESSINS SVG ---
 
-// 1. Paris - Ta nouvelle Tour Eiffel détaillée mise à jour
 const ParisIcon = ({ color }: { color: string }) => (
   <svg width="20" height="20" viewBox="0 0 241 404" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path 
-      d="M124.894 28.5L124.986 29.0273C127.225 29.4319 129.051 30.1075 130.534 31.0322C133.093 32.6273 134.581 34.9232 135.426 37.6777C136.266 40.4164 136.473 43.6231 136.479 47.0723C136.481 48.8001 136.433 50.6008 136.384 52.4424C136.335 54.2863 136.285 56.1733 136.285 58.0859H143.901V86.0859H130.405L143.397 187.022L142.901 187.086H162.901V215.086H150.44L178.364 283.897L177.901 284.086H189.901V312.086H183.49L239.825 402.321L240.303 403.086H177.901V402.086H238.5L182.478 312.351L182.901 312.086H57.4014L57.8252 312.351L1.80273 402.086H62.4014V403.086H0L0.477539 402.321L56.8125 312.086H49.9014V284.086H64.7637L92.3633 215.086H76.9014V187.086H99.9014L99.4053 187.022L112.397 86.0859H96.9014V58.0859H103.785C103.785 54.6493 103.523 51.1699 103.432 47.7666C103.341 44.3958 103.42 41.1428 104.127 38.3076C104.837 35.4599 106.188 33.0058 108.652 31.2744C110.349 30.0822 112.545 29.2535 115.364 28.8555L115.405 28.5254L118.905 0.0253906L119.894 0L124.894 28.5ZM112.006 346.525C114.41 346.352 116.395 346.367 117.78 346.427C118.473 346.456 119.017 346.497 119.389 346.53C119.574 346.547 119.717 346.561 119.814 346.572C119.862 346.578 119.898 346.583 119.924 346.586C135.257 346.051 146.266 348.151 155.381 356.266C164.468 364.356 171.599 378.365 179.375 401.427L178.901 401.586L178.428 401.746C170.655 378.693 163.589 364.913 154.716 357.013C145.878 349.144 135.173 347.049 119.919 347.586L119.878 347.588L119.836 347.582H119.835C119.834 347.582 119.832 347.581 119.83 347.581C119.825 347.58 119.817 347.579 119.806 347.578C119.784 347.575 119.749 347.571 119.704 347.566C119.614 347.556 119.477 347.542 119.299 347.526C118.942 347.494 118.414 347.455 117.737 347.426C116.385 347.368 114.439 347.352 112.078 347.522C107.354 347.863 100.977 348.948 94.3564 351.918C81.1491 357.843 66.8762 371.313 62.8975 401.651L62.4014 401.586L61.9053 401.521C65.9265 370.86 80.4038 357.08 93.9463 351.005C100.7 347.975 107.199 346.872 112.006 346.525ZM93.3652 215.271L65.8398 284.086H92.7393L118.368 215.086H92.9014L93.3652 215.271ZM119.37 215.26L93.8057 284.086H149.367L123.434 215.263L123.901 215.086H118.901L119.37 215.26ZM150.369 283.909L149.901 284.086H177.362L149.438 215.274L149.901 215.086H124.436L150.369 283.909ZM113.397 86.1494L100.405 187.086H142.397L129.405 86.1494L129.901 86.0859H112.901L113.397 86.1494ZM119.524 29.5859C114.722 29.586 111.454 30.5286 109.228 32.0928C107.011 33.65 105.767 35.8667 105.098 38.5498C104.425 41.2455 104.341 44.3834 104.432 47.7393C104.521 51.0627 104.785 54.6466 104.785 58.0859H135.285C135.285 56.158 135.335 54.2583 135.384 52.416C135.433 50.5712 135.481 48.7853 135.479 47.0742C135.473 43.6459 135.264 40.5625 134.47 37.9717C133.68 35.3967 132.318 33.3228 130.005 31.8809C127.678 30.4302 124.335 29.5859 119.524 29.5859Z" 
-      fill={color}
+      d="M124.894 28.5L124.986 29.0273C127.225 29.4319 129.051 30.1075 130.534 31.0322C133.093 32.6273 134.581 34.9232 135.426 37.6777C136.266 40.4164 136.473 43.6231 136.479 47.0723C136.481 48.8001 136.433 50.6008 136.384 52.4424C136.335 54.2863 136.285 56.1733 136.285 58.0859H143.901V86.0859H130.405L143.397 187.022L142.901 187.086H162.901V215.086H150.44L178.364 283.897L177.901 284.086H189.901V312.086H183.49L239.825 402.321L240.303 403.086H177.901V402.086H238.5L182.478 312.351L182.901 312.086H57.4014L57.8252 312.351L1.80273 402.086H62.4014V403.086H0L0.477539 402.321L56.8125 312.086H49.9014V284.086H64.7637L92.3633 215.086H76.9014V187.086H99.9014L99.4053 187.022L112.397 86.0859H96.9014V58.0859H103.785C103.785 54.6493 103.523 51.1699 103.432 47.7666C103.341 44.3958 103.42 41.1428 104.127 38.3076C104.837 35.4599 106.188 33.0058 108.652 31.2744C110.349 30.0822 112.545 29.2535 115.364 28.8555L115.405 28.5254L118.905 0.0253906L119.894 0L124.894 28.5ZM112.006 346.525C114.41 346.352 116.395 346.367 117.78 346.427C118.473 346.456 119.017 346.497 119.389 346.53C119.574 346.547 119.717 346.561 119.814 346.572C119.862 346.578 119.898 346.583 119.924 346.586C135.257 346.051 146.266 348.151 155.381 356.266C164.468 364.356 171.599 378.365 179.375 401.427L178.901 401.586L178.428 401.746C170.655 378.693 163.589 364.913 154.716 357.013C145.878 349.144 135.173 347.049 119.919 347.586L119.878 347.588L119.836 347.582H119.835C119.834 347.582 119.832 347.581 119.83 347.581C119.825 347.58 119.817 347.579 119.806 347.578C119.784 347.575 119.749 347.571 119.704 347.566C119.614 347.556 119.477 347.542 119.299 347.526C118.942 347.494 118.414 347.455 117.737 347.426C116.385 347.368 114.439 347.352 112.078 347.522C107.354 347.863 100.977 348.948 94.3564 351.918C81.1491 357.843 66.8762 371.313 62.8975 401.651L62.4014 401.586L61.9053 401.521C65.9265 370.86 80.4038 357.08 93.9463 351.005C100.7 347.975 107.199 346.872 112.006 346.525Z" 
+      stroke={color}
+      strokeWidth={6}
+      fill="none"
     />
   </svg>
 );
 
-// 2. Lyon - Ton profil de Lion personnalisé mis à jour
 const LyonIcon = ({ color }: { color: string }) => (
   <svg width="20" height="20" viewBox="0 0 52 56" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g id="Mask group">
@@ -28,53 +28,55 @@ const LyonIcon = ({ color }: { color: string }) => (
   </svg>
 );
 
-// 3. Marseille - (Inchangé)
 const MarseilleIcon = ({ color }: { color: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 6c.6 0 1.2-.2 1.5-.5C4.2 4.7 5.7 4 7.5 4s3.3.7 4 1.5c.3.3.9.5 1.5.5s1.2-.2 1.5-.5C16.2 4.7 17.7 4 19.5 4s3.3.7 4 1.5c.3.3.9.5 1.5.5" />
-    <path d="M2 12c.6 0 1.2-.2 1.5-.5.7-.8 2.2-1.5 4-1.5s3.3.7 4 1.5c.3.3.9.5 1.5.5s1.2-.2 1.5-.5c.7-.8 2.2-1.5 4-1.5s3.3.7 4 1.5c.3.3.9.5 1.5.5" />
-    <path d="M2 18c.6 0 1.2-.2 1.5-.5.7-.8 2.2-1.5 4-1.5s3.3.7 4 1.5c.3.3.9.5 1.5.5s1.2-.2 1.5-.5c.7-.8 2.2-1.5 4-1.5s3.3.7 4 1.5c.3.3.9.5 1.5.5" />
+  <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 95 L90 95 L70 80 H30 Z" stroke={color} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M30 80 V60 H70 V80 M30 70 H70" stroke={color} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M40 60 V25 H60 V60 M45 40 H55 M45 50 H55" stroke={color} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M40 25 L50 15 L60 25 M50 15 V5" stroke={color} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="50" cy="5" r="3" fill={color} />
   </svg>
 );
 
-// 4. Lille - (Inchangé)
 const LilleIcon = ({ color }: { color: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-    <line x1="4" x2="4" y1="22" y2="15" />
+  <svg width="20" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M14.157 19.763C13.003 17.677 12.628 16.515 12.904 14.37C13.524 12.728 15.357 10.843 16.162 10.467C16.949 10.1 20.739 10.687 21.163 11.444C21.208 11.575 21.228 11.553 21.163 11.444C20.355 9.1 19.087 7.762 17.245 7.366C14.031 7.589 12.681 11.487 12.025 14.148C11.994 16.635 12.326 17.844 13.457 19.763H14.157ZM10.262 19.763H9.005C9.597 15.622 11.247 13.748 7.115 5.889L10.262 0.441L13.409 5.889C9.277 13.748 10.927 15.622 11.519 19.763H10.262ZM7.115 19.763C8.269 17.677 8.644 16.515 8.368 14.37C7.748 12.728 5.915 10.843 5.11 10.467C4.313 10.087 0.134 10.737 0.068 11.543C0.877 9.148 2.17 7.771 4.019 7.366C7.233 7.589 8.583 11.487 9.239 14.148C9.27 16.635 8.938 17.844 7.807 19.763H7.115Z"
+      fill={color}
+    />
   </svg>
 );
 
-// 5. Toulouse - (Inchangé)
 const ToulouseIcon = ({ color }: { color: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M12 5a3 3 0 1 0 0 6 3 3 0 1 0 0-6Z" />
-    <path d="M12 13a3 3 0 1 0 0 6 3 3 0 1 0 0-6Z" />
-    <path d="M5 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0Z" />
-    <path d="M13 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0Z" />
+  <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 60V95 M50 75L35 65 M50 85L65 75" stroke={color} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M50 60L20 35L35 10L50 20L65 10L80 35Z" stroke={color} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M20 35L50 35L80 35 M35 10L50 35L65 10 M50 20V35 M50 35V60" stroke={color} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
-// 6. Nantes - On oublie l'éléphant raté, on fait une magnifique ancre marine (ville portuaire) très chic
 const NantesIcon = ({ color }: { color: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="5" r="2" />
-    <path d="M12 7v14M9 10h6M6 14c0 4.4 3.6 8 8 8s8-3.6 8-8" />
-    <path d="M5 13l2 2M19 13l-2 2" />
+  <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="12" r="8" stroke={color} strokeWidth="4"/>
+    <path d="M50 20V80M40 25H60M20 55C20 75 35 85 50 85C65 85 80 75 80 55" stroke={color} strokeWidth="6" strokeLinecap="round"/>
+    <path d="M15 50L20 58L28 53M85 50L80 58L72 53" stroke={color} strokeWidth="4" strokeLinejoin="round"/>
   </svg>
 );
 
-// 7. Angers - Un vrai beau blason de château fort épuré et symétrique
 const AngersIcon = ({ color }: { color: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 4h16v6c0 5.5-4.5 10-8 10s-8-4.5-8-10V4z" />
-    <path d="M9 4v4h6V4" />
-    <path d="M12 8v6" />
+  <svg width="20" height="20" viewBox="0 0 47 158" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M23.5 132.625V57.6247H1V50.1247H7.5V44.1247H1V36.6247H11.5V41.1247H16.5V36.6247H21.5V30.6247H16.5V25.1247H11.5V30.6247H1V22.6247H7.5V16.1247H1V8.62469H23.5V5.62469H21.5L25.5 0.624695M25.5 5.62469H28.5L24.5 0.624695M26.5 6.62469V133.125"
+      stroke={color}
+      strokeWidth={3}
+      fill="none"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <ellipse cx="23.5" cy="140" rx="21.5" ry="9.5" fill={color} />
   </svg>
 );
 
-// 8. Nice - (Inchangé)
 const NiceIcon = ({ color }: { color: string }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="4" />
@@ -82,7 +84,6 @@ const NiceIcon = ({ color }: { color: string }) => (
   </svg>
 );
 
-// 9. Monaco - (Inchangé)
 const MonacoIcon = ({ color }: { color: string }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" />
@@ -90,17 +91,15 @@ const MonacoIcon = ({ color }: { color: string }) => (
   </svg>
 );
 
-// 10. Strasbourg - Une flèche de cathédrale gothique ultra fine et géométrique
 const StrasbourgIcon = ({ color }: { color: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2L9 9h6l-3-7z" />
-    <path d="M9 9v11h6V9" />
-    <path d="M6 20h12" />
-    <path d="M12 9v11" />
+  <svg width="20" height="20" viewBox="0 0 216 261" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M108 0L76 43H91L45 106H69L23 169H55L0 245H89V261H127V245H216L161 169H193L147 106H171L125 43H140L108 0ZM108 26L126 51H90L108 26ZM108 75L141 121H75L108 75ZM108 141L156 207H60L108 141Z"
+      fill={color}
+    />
   </svg>
 );
 
-// 11. Bordeaux - (Inchangé)
 const BordeauxIcon = ({ color }: { color: string }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 22V13" />
@@ -109,24 +108,25 @@ const BordeauxIcon = ({ color }: { color: string }) => (
   </svg>
 );
 
-// 12. Montpellier - Un superbe soleil héraldique géométrique
 const MontpellierIcon = ({ color }: { color: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="5" />
-    <path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M5 19l3-3M16 8l3-3" />
+  <svg width="20" height="20" viewBox="0 0 177 165" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M49.7701 106V163H14.2701V106M49.7701 106H14.2701M49.7701 106C76.211 58.4349 104.097 62.2292 126.77 106M14.2701 106V50M14.2701 50V31M14.2701 50H162.27M14.2701 31L4.27008 19H14.2701M14.2701 31H162.27M14.2701 19V2H162.27V19M14.2701 19H162.27M162.27 31L172.27 19H162.27M162.27 31V50M126.77 106V163H162.27V106M126.77 106H162.27M162.27 106V50"
+      stroke={color}
+      strokeWidth="8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
-// 13. Toulon - (Inchangé)
 const ToulonIcon = ({ color }: { color: string }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 18H2a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4z" />
-    <path d="M10 2v16" />
-    <path d="M10 4l7 8H10z" />
+  <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 5V60M50 10L15 55H50M54 10L85 55H54" stroke={color} strokeWidth="4" strokeLinejoin="round"/>
+    <path d="M10 65C10 65 20 85 50 85C80 85 90 65 90 65H10Z" fill={color}/>
+    <path d="M0 85C15 75 35 75 50 85C65 95 85 95 100 85" stroke={color} strokeWidth="6" strokeLinecap="round"/>
   </svg>
 );
-
-// --- FIN DES DESSINS ---
 
 interface Props {
   city: string;
@@ -135,10 +135,6 @@ interface Props {
   onClose: () => void;
 }
 
-const G = '#C9A961';
-const BG = '#000000';
-
-// Ici, on a remplacé 'emoji' par notre composant 'Icon'
 const FRENCH_CITIES = [
   { name: 'Paris', Icon: ParisIcon },
   { name: 'Lyon', Icon: LyonIcon },
@@ -155,7 +151,8 @@ const FRENCH_CITIES = [
   { name: 'Toulon', Icon: ToulonIcon },
 ];
 
-export default function CityModal({ city, lang, onSelect, onClose }: Props) {
+export default function CityModal({ city, onSelect, onClose }: Props) {
+  const { t } = useLang();
   const [search, setSearch] = useState('');
   const filtered = FRENCH_CITIES.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -166,103 +163,152 @@ export default function CityModal({ city, lang, onSelect, onClose }: Props) {
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0,
-        background: 'rgba(0,0,0,0.75)',
-        zIndex: 50,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
+        background: 'rgba(0,0,0,0.65)',
+        backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+        zIndex: 250,
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#111',
-          borderRadius: 16,
-          padding: 24,
-          width: '100%',
-          maxWidth: 400,
-          maxHeight: '80vh',
-          overflowY: 'auto',
-          border: `2px solid ${G}`,
+          background: 'var(--bg-card)',
+          borderRadius: '24px 24px 0 0',
+          padding: '0 0 24px',
+          width: '100%', maxWidth: 430,
+          maxHeight: '88vh',
+          display: 'flex', flexDirection: 'column',
+          border: '1px solid rgba(214,188,130,0.18)',
+          borderBottom: 'none',
+          fontFamily: 'var(--f-body)',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ fontFamily: 'var(--f-display)', fontSize: 20, fontWeight: 700, color: G, margin: 0 }}>
-            {t('destination', lang)}
-          </h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <X size={20} color={G} />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(244,238,223,0.15)' }} />
+        </div>
+
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+          padding: '14px 20px 8px',
+        }}>
+          <div>
+            <p style={{
+              fontFamily: 'var(--f-mono)', fontSize: 11,
+              color: 'var(--text-muted)', letterSpacing: '0.22em',
+              textTransform: 'uppercase', margin: '0 0 8px',
+            }}>
+              {t('destination')}
+            </p>
+            <h2 style={{
+              fontFamily: 'var(--f-display)', fontStyle: 'italic',
+              fontSize: 34, fontWeight: 400, color: 'var(--accent)',
+              margin: 0, letterSpacing: '-0.02em', lineHeight: 1,
+            }}>
+              {t('city_modal_where')}
+            </h2>
+          </div>
+          <button onClick={onClose} style={{
+            width: 40, height: 40, borderRadius: '50%',
+            border: '1px solid rgba(244,238,223,0.12)',
+            background: 'var(--bg-soft-strong)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', flexShrink: 0,
+          }}>
+            <X size={18} color="var(--text-muted)" strokeWidth={1.8} />
           </button>
         </div>
 
-        <div style={{ position: 'relative', marginBottom: 20 }}>
-          <Search size={14} color="#666" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={t('search_city', lang)}
-            style={{
-              width: '100%',
-              padding: '10px 14px 10px 34px',
-              background: BG,
-              border: `1.5px solid ${G}`,
-              borderRadius: 10,
-              color: G,
-              fontFamily: 'var(--f-display)',
-              fontSize: 14,
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
+        <div style={{ padding: '12px 20px 16px' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={16} color="var(--text-faint)" style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={t('search_city')}
+              style={{
+                width: '100%',
+                padding: '14px 16px 14px 44px',
+                background: 'var(--bg-soft)',
+                border: '1px solid rgba(244,238,223,0.10)',
+                borderRadius: 14,
+                color: 'var(--text)',
+                fontFamily: 'var(--f-body)',
+                fontSize: 15,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
         </div>
 
-        <p style={{ fontFamily: 'var(--f-display)', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
-          {t('french_cities', lang)}
-        </p>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
+          <p style={{
+            fontFamily: 'var(--f-mono)', fontSize: 11,
+            color: 'var(--text-muted)', letterSpacing: '0.22em',
+            textTransform: 'uppercase', margin: '0 0 14px',
+          }}>
+            {t('french_cities')}
+          </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          {filtered.length > 0 ? (
-            filtered.map(c => {
-              const isSelected = city === c.name;
-              // On prépare le composant d'icône pour l'affichage
-              const CityIcon = c.Icon;
-              
-              return (
-                <button
-                  key={c.name}
-                  onClick={() => { onSelect(c.name); onClose(); }}
-                  style={{
-                    padding: '12px 10px',
-                    borderRadius: 12,
-                    border: `2px solid ${isSelected ? G : '#333'}`,
-                    background: isSelected ? G : BG,
-                    cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    transition: 'all 150ms',
-                  }}
-                >
-                  {/* C'est ici qu'on affiche l'icône avec la bonne couleur */}
-                  <CityIcon color={isSelected ? BG : G} />
-                  
-                  <span style={{
-                    fontFamily: 'var(--f-display)', fontSize: 13, fontWeight: 600,
-                    color: isSelected ? BG : G,
-                  }}>
-                    {c.name}
-                  </span>
-                </button>
-              );
-            })
-          ) : (
-            <p style={{ gridColumn: 'span 2', textAlign: 'center', color: '#666', fontFamily: 'var(--f-display)', fontSize: 13, padding: 20 }}>
-              {t('no_city', lang)}
-            </p>
-          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {filtered.length > 0 ? (
+              filtered.map(c => {
+                const isSelected = city === c.name;
+                const CityIcon = c.Icon;
+                return (
+                  <button
+                    key={c.name}
+                    onClick={() => { onSelect(c.name); onClose(); }}
+                    style={{
+                      padding: '16px 14px',
+                      borderRadius: 16,
+                      border: `1px solid ${isSelected ? 'rgba(214,188,130,0.55)' : 'var(--stroke-soft)'}`,
+                      background: isSelected ? 'rgba(214,188,130,0.06)' : 'var(--bg-soft)',
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      transition: 'all 200ms ease',
+                      boxShadow: isSelected ? '0 0 20px rgba(212,168,67,0.12)' : 'none',
+                      fontFamily: 'var(--f-body)',
+                    }}
+                  >
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 10,
+                      background: isSelected ? 'rgba(214,188,130,0.10)' : 'var(--bg-soft-strong)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <CityIcon color={isSelected ? 'var(--accent)' : 'var(--text-muted)'} />
+                    </div>
+                    <span style={{
+                      fontSize: 15, fontWeight: 600,
+                      color: isSelected ? 'var(--accent)' : 'var(--text)',
+                      letterSpacing: '-0.005em',
+                    }}>
+                      {c.name}
+                    </span>
+                  </button>
+                );
+              })
+            ) : (
+              <p style={{
+                gridColumn: 'span 2', textAlign: 'center',
+                fontFamily: 'var(--f-display)', fontStyle: 'italic',
+                fontSize: 15, color: 'var(--text-muted)', padding: '40px 20px',
+              }}>
+                {t('no_city')}
+              </p>
+            )}
+          </div>
+
+          <p style={{
+            fontSize: 12, color: 'var(--text-faint)',
+            marginTop: 18, lineHeight: 1.5,
+            fontFamily: 'var(--f-body)',
+          }}>
+            {t('city_note')}
+          </p>
         </div>
-
-        <p style={{ fontFamily: 'var(--f-display)', fontSize: 10, color: '#555', marginTop: 16, lineHeight: 1.5 }}>
-          {t('city_note', lang)}
-        </p>
       </div>
     </div>
   );

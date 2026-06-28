@@ -9,21 +9,31 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- Polices utilisées dans ton app -->
+    <!-- Polices DA Luxe : Geist (body), Instrument Serif (display + logo), JetBrains Mono (mono), Caveat (manuscrit) -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Pacifico&family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=Caveat:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Caveat:wght@400;500&display=swap"
       rel="stylesheet"
     />
 
-    <!-- Script Bukhari -->
-    <link href="https://fonts.cdnfonts.com/css/bukhari-script" rel="stylesheet" />
-
     <meta name="description" content="Your Trip — Plan your perfect day with AI" />
+
+    <!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json" />
+
+<!-- iOS PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Your Trip" />
+<link rel="apple-touch-icon" href="/icon-192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-192.png" />
+
+<!-- Theme color -->
+<meta name="theme-color" content="#0a0a0a" />
 
     <style>
       /* Éviter le flash blanc au chargement */
       html, body, #root {
-        background: #0A0A0F;
+        background: #08070A;
         min-height: 100vh;
       }
     </style>
@@ -34,4 +44,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

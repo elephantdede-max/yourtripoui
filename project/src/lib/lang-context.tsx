@@ -1,19 +1,20 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { translations, type LangCode } from './i18n';
+import { translations, type LangCode, setGlobalLang, getGlobalLang } from './i18n';
 import { supabase } from './supabase';
 
 interface LangContextType {
   lang: LangCode;
-  setLang: (l: LangCode) => void;
+  setLang: (l: LangCode) => Promise<void>;
   t: (key: string) => string;
 }
 
 const LangContext = createContext<LangContextType | undefined>(undefined);
 
 export function LangProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<LangCode>('fr');
+  // On lit la langue déjà initialisée dans i18n.ts (localStorage ou navigateur)
+  const [lang, setLangState] = useState<LangCode>(getGlobalLang());
 
-  // Charger la langue sauvegardée du profil au démarrage
+  // Si user connecté → la langue de son profil prend le dessus
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -23,20 +24,22 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
         .select('lang')
         .eq('id', user.id)
         .maybeSingle();
-      if (data?.lang) setLangState(data.lang as LangCode);
+      if (data?.lang && data.lang !== lang) {
+        setGlobalLang(data.lang as LangCode);
+        setLangState(data.lang as LangCode);
+      }
     })();
   }, []);
 
-  // Changer la langue + sauvegarder dans Supabase
   const setLang = async (l: LangCode) => {
-    setLangState(l);
+    setGlobalLang(l);       // 1. Variable globale + localStorage (synchrone)
+    setLangState(l);        // 2. State React → re-render des composants qui consomment useLang()
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase.from('user_profiles').update({ lang: l }).eq('id', user.id);
     }
   };
 
-  // Fonction de traduction liée à la langue courante
   const t = (key: string): string => {
     const dict = translations[lang] || translations.fr;
     return dict[key] || translations.fr[key] || key;

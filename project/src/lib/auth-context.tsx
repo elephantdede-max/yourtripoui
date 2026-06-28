@@ -10,6 +10,10 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  verifyOtp: (email: string, token: string) => Promise<void>;
+  resendOtp: (email: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+resetPassword: (email: string, token: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,25 +39,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) throw error;
+  return { user: data.user, session: data.session };
+};
 
-    // Si pas de session (confirmation email requise), on essaie de se connecter directement
-    if (!data.session && data.user) {
-      try {
-        const { data: loginData } = await supabase.auth.signInWithPassword({ email, password });
-        if (loginData.session) {
-          setSession(loginData.session);
-          setUser(loginData.user);
-          return { user: loginData.user, session: loginData.session };
-        }
-      } catch {
-        // Ignore — l'utilisateur devra confirmer son email
-      }
-    }
+const verifyOtp = async (email: string, token: string) => {
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'signup',
+  });
+  if (error) throw error;
+};
 
-    return { user: data.user, session: data.session };
-  };
+const resendOtp = async (email: string) => {
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+  });
+  if (error) throw error;
+};
+const requestPasswordReset = async (email: string) => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  if (error) throw error;
+};
+
+const resetPassword = async (email: string, token: string, newPassword: string) => {
+  // 1. Vérifier l'OTP de recovery → ça crée une session
+  const { error: vErr } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'recovery',
+  });
+  if (vErr) throw vErr;
+
+  // 2. Une fois la session active, on peut update le mot de passe
+  const { error: uErr } = await supabase.auth.updateUser({ password: newPassword });
+  if (uErr) throw uErr;
+};
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -61,12 +85,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) throw error;
-  };
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin,
+      queryParams: {
+        prompt: 'select_account',
+      },
+    },
+  });
+  if (error) throw error;
+};
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -75,9 +104,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signInWithGoogle, signOut }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signInWithGoogle, signOut, verifyOtp, resendOtp, requestPasswordReset, resetPassword }}>
+  {children}
+</AuthContext.Provider>
+    
   );
 }
 

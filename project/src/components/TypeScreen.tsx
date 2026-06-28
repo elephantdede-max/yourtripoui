@@ -1,19 +1,21 @@
 import { ArrowLeft } from 'lucide-react';
 import type { ExperienceType, VibeType, BudgetType, DayConfig } from '../types';
 import type { LangCode } from '../lib/i18n';
-import { t } from '../lib/i18n';
+import { useLang } from '../lib/lang-context';
 import Tooltip from './Tooltip';
+import { useThemeColors } from '../lib/theme-context';
 
 const G = '#C9A961';
 const BG = '#000000';
 
-const EXPERIENCES: { value: ExperienceType; label: string; emoji: string; color: string }[] = [
-  { value: 'chill',       label: 'Chill',       emoji: '☕', color: '#22D3EE' },
-  { value: 'date',        label: 'Date',        emoji: '🖤', color: '#EC4899' },
-  { value: 'aventure',    label: 'Aventure',    emoji: '🗺️', color: '#4ADE80' },
-  { value: 'culturel',    label: 'Culturel',    emoji: '🧠', color: '#8B5CF6' },
-  { value: 'gastronomie', label: 'Gastronomie', emoji: '🍴', color: '#F97316' },
-  { value: 'nature',      label: 'Nature',      emoji: '🌱', color: '#16A34A' },
+const EXPERIENCES: { value: ExperienceType; labelKey: string; emoji: string; color: string }[] = [
+  { value: 'chill',       labelKey: 'exp_chill',       emoji: '☕', color: '#22D3EE' },
+  { value: 'date',        labelKey: 'exp_date',        emoji: '🖤', color: '#EC4899' },
+  { value: 'aventure',    labelKey: 'exp_aventure',    emoji: '🗺️', color: '#4ADE80' },
+  { value: 'culturel',    labelKey: 'exp_culturel',    emoji: '🧠', color: '#8B5CF6' },
+  { value: 'gastronomie', labelKey: 'exp_gastronomie', emoji: '🍴', color: '#F97316' },
+  { value: 'nature',      labelKey: 'exp_nature',      emoji: '🌱', color: '#16A34A' },
+  { value: 'amusement',   labelKey: 'exp_amusement',   emoji: '🎉', color: '#FBBF24' },
 ];
 
 const BUDGETS: { value: BudgetType; labelKey: string; emoji: string }[] = [
@@ -62,15 +64,17 @@ const sectionLabel: React.CSSProperties = {
   color: G,
 };
 
-export default function TypeScreen({ dayConfig, dayIndex, totalDays, dayLabel, lang, onChange, onNext, onBack }: Props) {
+export default function TypeScreen({ dayConfig, dayIndex, totalDays, dayLabel, onChange, onNext, onBack }: Props) {
+  const { t, lang } = useLang();
   const canProceed = dayConfig.types.length > 0 && (dayConfig.vibes || []).length > 0 && dayConfig.budget;
-  const progressPct = ((dayIndex + 1) / totalDays) * 40 + 20;
+  const progressPct = 50;
+  const { accent } = useThemeColors();
 
   return (
     <div style={{ minHeight: '100vh', background: BG, display: 'flex', flexDirection: 'column', maxWidth: 430, margin: '0 auto' }}>
 
       <div style={{ padding: '20px 20px 0', flexShrink: 0 }}>
-        <span style={{ fontFamily: 'var(--f-logo)', fontSize: 28, color: G }}>Your Trip</span>
+        <span style={{ fontFamily: 'var(--f-logo)', fontSize: 28, color: accent }}>Your Trip</span>
         <div style={{ height: 3, background: '#333', borderRadius: 2, overflow: 'hidden', margin: '10px 0 0' }}>
           <div style={{ height: '100%', width: `${progressPct}%`, background: G, borderRadius: 2, transition: 'width 400ms' }} />
         </div>
@@ -80,28 +84,28 @@ export default function TypeScreen({ dayConfig, dayIndex, totalDays, dayLabel, l
 
         <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', marginBottom: 14 }}>
           <ArrowLeft size={16} color={G} />
-          <span style={{ fontFamily: 'var(--f-display)', fontSize: 14, color: G }}>{t('back', lang)}</span>
+          <span style={{ fontFamily: 'var(--f-display)', fontSize: 14, color: G }}>{t('back')}</span>
         </button>
 
         <div style={{ background: G, borderRadius: 24, padding: '8px 20px', marginBottom: 20, display: 'inline-block' }}>
           <span style={{ fontFamily: 'var(--f-display)', fontSize: 14, fontWeight: 600, color: BG }}>
-            {dayLabel} {t('day', lang)} {dayIndex + 1}/{totalDays}
+            {dayLabel} {t('day')} {dayIndex + 1}/{totalDays}
           </span>
         </div>
 
         <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 26, fontWeight: 700, marginBottom: 4, lineHeight: 1.2 }}>
-          <span style={{ color: G }}>{t('tell_us', lang)}</span>
-          <span style={{ color: '#888' }}>{t('tell_us_2', lang)}</span>
+          <span style={{ color: G }}>{t('tell_us')}</span>
+          <span style={{ color: '#888' }}>{t('tell_us_2')}</span>
         </h1>
         <p style={{ fontFamily: 'var(--f-display)', fontSize: 13, color: '#666', marginBottom: 24 }}>
-          {t('tell_us_desc', lang)}
+          {t('tell_us_desc')}
         </p>
 
         {/* Type d'expérience */}
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <span style={sectionLabel}>{t('experience_type', lang)}</span>
-            <Tooltip title={t('tt_experience', lang)} description={t('tt_experience_desc', lang)} lang={lang} />
+            <span style={sectionLabel}>{t('experience_type')}</span>
+            <Tooltip title={t('tt_experience')} description={t('tt_experience_desc')} lang={lang} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {EXPERIENCES.map(exp => {
@@ -121,7 +125,7 @@ export default function TypeScreen({ dayConfig, dayIndex, totalDays, dayLabel, l
                 >
                   <span style={{ fontSize: 28 }}>{exp.emoji}</span>
                   <span style={{ fontFamily: 'var(--f-display)', fontSize: 14, fontWeight: 700, color: selected ? BG : G }}>
-                    {exp.label}
+                    {t(exp.labelKey)}
                   </span>
                 </button>
               );
@@ -132,8 +136,8 @@ export default function TypeScreen({ dayConfig, dayIndex, totalDays, dayLabel, l
         {/* Budget */}
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <span style={sectionLabel}>{t('budget', lang)}</span>
-            <Tooltip title={t('tt_budget', lang)} description={t('tt_budget_desc', lang)} lang={lang} />
+            <span style={sectionLabel}>{t('budget')}</span>
+            <Tooltip title={t('tt_budget')} description={t('tt_budget_desc')} lang={lang} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {BUDGETS.map(b => {
@@ -153,7 +157,7 @@ export default function TypeScreen({ dayConfig, dayIndex, totalDays, dayLabel, l
                 >
                   <span style={{ fontSize: 26, color: selected ? BG : G }}>{b.emoji}</span>
                   <span style={{ fontFamily: 'var(--f-display)', fontSize: 14, fontWeight: 700, color: selected ? BG : G }}>
-                    {t(b.labelKey, lang)}
+                    {t(b.labelKey)}
                   </span>
                 </button>
               );
@@ -164,8 +168,8 @@ export default function TypeScreen({ dayConfig, dayIndex, totalDays, dayLabel, l
         {/* Ambiance */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <span style={sectionLabel}>{t('vibe', lang)}</span>
-            <Tooltip title={t('tt_vibe', lang)} description={t('tt_vibe_desc', lang)} lang={lang} />
+            <span style={sectionLabel}>{t('vibe')}</span>
+            <Tooltip title={t('tt_vibe')} description={t('tt_vibe_desc')} lang={lang} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {VIBES.map(v => {
@@ -184,7 +188,7 @@ export default function TypeScreen({ dayConfig, dayIndex, totalDays, dayLabel, l
                     transition: 'background 150ms',
                   }}
                 >
-                  {t(v.labelKey, lang)}
+                  {t(v.labelKey)}
                 </button>
               );
             })}
@@ -199,7 +203,7 @@ export default function TypeScreen({ dayConfig, dayIndex, totalDays, dayLabel, l
           color: canProceed ? BG : '#666',
           transition: 'background 200ms',
         }}>
-          {t('continue', lang)}
+          {t('continue')}
         </button>
       </div>
     </div>

@@ -1,11 +1,10 @@
-export type ExperienceType = 'chill' | 'date' | 'aventure' | 'culturel' | 'gastronomie' | 'nature';
+export type ExperienceType = 'chill' | 'date' | 'aventure' | 'culturel' | 'gastronomie' | 'nature' | 'amusement';
 export type VibeType = 'calme' | 'romantique' | 'festif' | 'solo' | 'amis';
 export type BudgetType = 'free' | 'low' | 'mid' | 'high';
-export type PlaceType = 'food' | 'chill' | 'culture' | 'view' | 'social';
+export type PlaceType = 'food' | 'chill' | 'culture' | 'view' | 'social' | 'leisure' | 'nature';
 
-export type MobilityType = 'pied' | 'transport' | 'voiture';
+export type MobilityType = 'pied' | 'velo' | 'transport' | 'voiture';
 export type MealPreference = 'oui' | 'non';
-export type DietType = 'aucune' | 'vegetarien' | 'vegan' | 'halal' | 'casher' | 'sans-gluten' | 'sans-lactose' | 'autre';
 export type PlacePreference = 'nature' | 'urbain' | 'culture' | 'shopping' | 'mix';
 export type DiscoveryType = 'connus' | 'caches' | 'mix';
 export type FlexibilityType = 'structure' | 'flexible' | 'libre';
@@ -13,7 +12,6 @@ export type FlexibilityType = 'structure' | 'flexible' | 'libre';
 export interface PrecisionConfig {
   mobility: MobilityType[];
   meal: MealPreference | null;
-  diet: DietType[];
   placePref: PlacePreference[];
   discovery: DiscoveryType | null;
   flexibility: FlexibilityType | null;
@@ -32,12 +30,15 @@ export interface Place {
   ver: boolean;
   score: number;
   vid?: string;
+  subType?: 'cafe' | 'restaurant' | 'bar' | 'theater';
   community?: boolean;
   status?: 'pending' | 'verified';
   votes?: number;
   trustScore?: number;
   submittedAt?: string;
   needsReservation?: boolean;
+  website_url?: string;
+  booking_url?: string;
 }
 
 export interface PlanStep extends Place {
@@ -45,6 +46,7 @@ export interface PlanStep extends Place {
   endTime: string;
   km: number;
   tr: { icon: string; txt: string } | null;
+  isPremiumPlaceholder?: boolean;
 }
 
 export interface DayPlan {

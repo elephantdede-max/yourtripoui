@@ -1,2 +1,38 @@
+# Dépendances
 node_modules/
+
+# Variables d'environnement
 .env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Build
+dist/
+build/
+.vite/
+
+# Vercel
+.vercel
+
+# Supabase CLI
+supabase/.temp/
+supabase/.branches/
+
+# Backups
+*.zip
+*.tar.gz
+
+# Logs
+*.log
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
+
+# Scripts perso
+geocode.mjs
+generate_villes.py

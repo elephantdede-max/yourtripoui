@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Star, MapPin, ChevronRight, ArrowLeft } from 'lucide-react';
 import type { PlanStep } from '../types';
 import { supabase } from '../lib/supabase';
+import { useLang } from '../lib/lang-context';
 
 interface SimilarPlace {
   id: string | number; name: string; description: string;
@@ -18,22 +19,21 @@ interface Props {
 }
 
 const CATEGORIES = [
-  { type: 'restaurant', label: 'Restaurant', emoji: '🍴', dbTypes: ['restaurant'] },
-  { type: 'cafe',       label: 'Café',       emoji: '☕', dbTypes: ['cafe'] },
-  { type: 'bar',        label: 'Bar',        emoji: '🍸', dbTypes: ['bar'] },
-  { type: 'museum',     label: 'Musée',      emoji: '🖼️', dbTypes: ['museum'] },
-  { type: 'theater',    label: 'Théâtre',    emoji: '🎭', dbTypes: ['theater'] },
-  { type: 'park',       label: 'Parc',       emoji: '🌳', dbTypes: ['park'] },
-  { type: 'monument',   label: 'Monument',   emoji: '🏛️', dbTypes: ['monument'] },
+  { type: 'restaurant', labelKey: 'replace_cat_restaurant', emoji: '🍴', dbTypes: ['restaurant'] },
+  { type: 'cafe',       labelKey: 'replace_cat_cafe',       emoji: '☕', dbTypes: ['cafe'] },
+  { type: 'bar',        labelKey: 'replace_cat_bar',        emoji: '🍸', dbTypes: ['bar'] },
+  { type: 'museum',     labelKey: 'replace_cat_museum',     emoji: '🖼️', dbTypes: ['museum'] },
+  { type: 'theater',    labelKey: 'replace_cat_theater',    emoji: '🎭', dbTypes: ['theater'] },
+  { type: 'park',       labelKey: 'replace_cat_park',       emoji: '🌳', dbTypes: ['park'] },
+  { type: 'monument',   labelKey: 'replace_cat_monument',   emoji: '🏛️', dbTypes: ['monument'] },
 ];
 
 const BUDGET_LABEL: Record<string, string> = {
-  économique: '€', modéré: '€€', flexible: '€€€', premium: '€€€€',
+  low: '€', medium: '€€', high: '€€€',
 };
 
-// Fix Gemini #3 : table de correspondance budget interne → Supabase
 const BUDGET_MAP_REVERSE: Record<string, string> = {
-  free: 'économique', low: 'économique', mid: 'modéré', high: 'premium',
+  free: 'low', low: 'low', mid: 'medium', high: 'high',
 };
 
 const G = '#C9A961';
@@ -47,6 +47,7 @@ function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): num
 }
 
 export default function ReplaceLieuModal({ step, city, onSelect, onClose }: Props) {
+  const { t } = useLang();
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [places, setPlaces] = useState<SimilarPlace[]>([]);
   const [loading, setLoading] = useState(false);
@@ -57,28 +58,40 @@ export default function ReplaceLieuModal({ step, city, onSelect, onClose }: Prop
     const cat = CATEGORIES.find(c => c.type === selectedCat);
     const dbTypes = cat?.dbTypes || [selectedCat];
 
-    // Fix Gemini #3 : traduire le budget interne vers le format Supabase
     const stepInternalBudget = step.budget?.[0] || 'low';
     const targetBudgetLabel = BUDGET_MAP_REVERSE[stepInternalBudget] || 'modéré';
 
-    supabase
+    const stepIdNum = Number(step.id);
+    const isValidId = Number.isInteger(stepIdNum) && stepIdNum > 0;
+
+    let query = supabase
       .from('places')
-      .select('id, name, description, rating_average, review_count, budget, discovery_level, lat, lng, type, duration')
-      .eq('city', city)  // Fix Gemini #1 : filtre par ville
-      .in('type', dbTypes)
-      .neq('id', step.id)
+      .select('id, name, description, rating_average, review_count, budget_level, discovery_level, category, lat, lng')
+      .eq('city', city)
+      .in('category', dbTypes);
+
+    if (isValidId) {
+      query = query.neq('id', stepIdNum);
+    }
+
+    query
       .order('rating_average', { ascending: false })
       .limit(30)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[ReplaceLieuModal] Supabase error:', error);
+        }
         if (data) {
           setPlaces(data
             .map((p: any) => ({
               ...p,
-              dur: p.duration || 60,
+              budget: p.budget_level,
+              type: p.category,
+              dur: 60,
               _distance: step.lat && step.lng && p.lat && p.lng
-                ? distanceKm(step.lat, step.lng, p.lat, p.lng) : null,
+          ? distanceKm(step.lat, step.lng, p.lat, p.lng)
+          : null,
             }))
-            // Fix Gemini #2 : tri Budget → Note → Distance
             .sort((a: any, b: any) => {
               const bMatch = (x: any) => x.budget === targetBudgetLabel ? 0 : 1;
               const bDiff = bMatch(a) - bMatch(b);
@@ -120,10 +133,10 @@ export default function ReplaceLieuModal({ step, city, onSelect, onClose }: Prop
             )}
             <div>
               <h3 style={{ fontFamily: 'var(--f-display)', fontSize: 18, fontWeight: 700, color: '#FFF' }}>
-                {selectedCat ? CATEGORIES.find(c => c.type === selectedCat)?.label : 'Remplacer cette activité'}
+                {selectedCat ? t(CATEGORIES.find(c => c.type === selectedCat)?.labelKey || '') : t('replace_title')}
               </h3>
               <p style={{ fontFamily: "'Caveat', cursive", fontSize: 14, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
-                {selectedCat ? 'Budget et note similaires · À proximité' : 'Choisissez une catégorie'}
+                {selectedCat ? t('replace_cat_subtitle') : t('replace_subtitle')}
               </p>
             </div>
           </div>
@@ -147,7 +160,7 @@ export default function ReplaceLieuModal({ step, city, onSelect, onClose }: Prop
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 24 }}>{cat.emoji}</span>
                     <span style={{ fontFamily: 'var(--f-display)', fontSize: 16, fontWeight: 600, color: '#FFF' }}>
-                      {cat.label}
+                      {t(cat.labelKey)}
                     </span>
                   </div>
                   <ChevronRight size={18} color="rgba(255,255,255,0.3)" />
@@ -159,13 +172,13 @@ export default function ReplaceLieuModal({ step, city, onSelect, onClose }: Prop
           {/* VUE LIEUX */}
           {selectedCat && loading && (
             <div style={{ textAlign: 'center', padding: 40, fontFamily: "'Caveat', cursive", fontSize: 16, color: 'rgba(255,255,255,0.55)' }}>
-              Recherche des meilleures alternatives...
+              {t('replace_loading')}
             </div>
           )}
 
           {selectedCat && !loading && places.length === 0 && (
             <div style={{ textAlign: 'center', padding: 40, fontFamily: 'var(--f-body)', fontSize: 14, color: 'rgba(255,255,255,0.28)' }}>
-              Aucun lieu disponible dans cette catégorie
+              {t('replace_no_places')}
             </div>
           )}
 

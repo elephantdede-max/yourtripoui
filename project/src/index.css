@@ -6,14 +6,20 @@
   --bg-card:      #111118;
   --bg-elevated:  #18181F;
   --bg-input:     #1C1C24;
+  --bg-nav:       rgba(16,15,19,0.85);
  
   --border:       rgba(201,169,97,0.25);
   --border-hover: rgba(201,169,97,0.45);
  
-  /* OR MAT PÂLE — sans reflet, sans brillance */
-  --accent:       #C9A961;
-  --accent-dim:   rgba(201,169,97,0.12);
-  --accent-soft:  #B89A56;
+  /* ─────── OR DORÉ — Accent principal (raccord logo iOS) ─────── */
+  --accent:        #D4A843;   /* Or doré chaud, comme le logo */
+  --accent-dim:    rgba(212, 168, 67, 0.12);
+  --accent-soft:   #B8923A;
+  --accent-bright: #E5C46A;
+  --accent-cream:  #F4E0A8;
+
+  /* Gradient logo (centré or → bord plus foncé) */
+  --grad-logo: linear-gradient(135deg, #E5C46A 0%, #D4A843 50%, #B8923A 100%);
  
   --terra:        #B0703D;
   --green:        #3A5A28;
@@ -25,7 +31,7 @@
   /* Gradient header — mat, peu contrasté */
   --grad:   linear-gradient(135deg, #15110A 0%, #5A4A28 60%, #C9A961 100%);
  
-  --f-display: 'Cormorant Garamond', Georgia, serif;
+  --f-display: 'Inter', Georgia, serif;
   --f-body:    'Inter', system-ui, sans-serif;
   --f-hand:    'Caveat', cursive;
   --f-logo:    'Bukhari Script', 'Pacifico', cursive;
@@ -40,6 +46,38 @@
   --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
   --shadow-lg: 0 8px 40px rgba(0,0,0,0.7);
   --shadow-accent: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+/* ───────────────────────────────────────── */
+/* DA LUXE PREMIUM — mode clair (utilisateurs Premium) */
+/* ───────────────────────────────────────── */
+body.theme-premium {
+  /* Fond crème nettement visible */
+  --bg: #EFE6D2;
+  --bg-card: #FBF6E8;
+  --bg-soft: rgba(26,18,8,0.045);
+  --bg-soft-strong: rgba(26,18,8,0.085);
+  --bg-nav: rgba(251,246,232,0.92);
+
+  --text: #1A1208;
+  --text-muted: #6B5A3D;
+  --text-faint: #9B8A6E;
+
+  --accent: #D4A843;
+  --grad-logo: linear-gradient(135deg, #E5C46A 0%, #D4A843 50%, #B8923A 100%);
+
+  --stroke-soft: rgba(26,18,8,0.10);
+  --stroke-card: rgba(26,18,8,0.14);
+  --stroke-gold: rgba(212,168,67,0.55);
+
+  --shadow-card: 0 1px 3px rgba(26,18,8,0.06), 0 8px 24px rgba(26,18,8,0.08);
+  --shadow-gold: 0 10px 28px rgba(212,168,67,0.25);
+}
+
+/* Adoucir tous les fonds sombres profonds sur thème clair */
+body.theme-premium [style*="background: 'var(--bg)'"],
+body.theme-premium [style*="background:#08070A"] {
+  background: var(--bg) !important;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; }
@@ -69,7 +107,7 @@ body {
 
 /* Masquer l'icône native des inputs date/time */
 
-input[type="date"], input[type="time"] {
+input[type="date"] {
   -webkit-appearance: none;
   appearance: none;
 }
@@ -78,3 +116,70 @@ input[type="date"], input[type="time"] {
 .fade-in   { animation: fadeIn  200ms ease both; }
 .slide-up  { animation: slideUp 320ms cubic-bezier(.32,.72,0,1) both; }
 .slide-right { animation: slideRight 280ms cubic-bezier(.32,.72,0,1) both; }
+/* Forcer l'icône horloge sur les inputs time */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: block !important;
+  opacity: 1 !important;
+  filter: invert(0.8) sepia(0.6) saturate(3) hue-rotate(15deg);
+  cursor: pointer;
+  padding: 4px;
+
+  .leaflet-container,
+.leaflet-pane,
+.leaflet-control,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 1 !important;
+}
+
+/* Notif qui s'envole vers la cloche */
+@keyframes flyToBell {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  50%  { opacity: 0.7; }
+  100% { transform: translate(42vw, -260px) scale(0.05); opacity: 0; }
+}
+.fly-to-bell {
+  animation: flyToBell 650ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
+  pointer-events: none;
+}
+
+/* Cloche qui réagit */
+@keyframes bellPulse {
+  0%, 100% { transform: scale(1); }
+  40%      { transform: scale(1.3); }
+}
+.bell-pulse { animation: bellPulse 450ms ease; }
+
+/* Badge cloche */
+@keyframes badgePop {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.badge-pop { animation: badgePop 350ms ease forwards; }
+
+/* Forcer Leaflet derrière tous les panels overlay */
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control-zoom,
+.leaflet-control-attribution {
+  z-index: 1 !important;
+}
+.leaflet-marker-pane,
+.leaflet-overlay-pane {
+  z-index: 2 !important;
+}
+.leaflet-popup-pane,
+.leaflet-tooltip-pane {
+  z-index: 3 !important;
+}
+@keyframes savedPop {
+  0%   { opacity: 0; transform: scale(0.7); }
+  50%  { opacity: 1; transform: scale(1.18); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.saved-pop {
+  animation: savedPop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+}

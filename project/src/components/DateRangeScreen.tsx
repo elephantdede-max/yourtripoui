@@ -1,7 +1,8 @@
-import { MapPin, Calendar, Clock4 } from 'lucide-react';
+import { MapPin, Calendar, Clock4, ChevronLeft, ArrowRight, Sparkles } from 'lucide-react';
+import { useLang } from '../lib/lang-context';
 import type { LangCode } from '../lib/i18n';
-import { t } from '../lib/i18n';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import AppHeader from './AppHeader';
 
 interface Props {
   city: string;
@@ -18,114 +19,11 @@ interface Props {
   onBack: () => void;
 }
 
-const G = '#C9A961';
-const BG = '#000000';
+const MAX_DAYS = 7;
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 14px',
-  background: BG,
-  border: `1.5px solid ${G}`,
-  borderRadius: 10,
-  color: G,
-  fontFamily: '"Inter", system-ui, sans-serif',
-  fontSize: 15,
-  outline: 'none',
-  boxSizing: 'border-box' as const,
+const LOCALE_MAP: Record<string, string> = {
+  fr: 'fr-FR', en: 'en-GB', es: 'es-ES', de: 'de-DE', pt: 'pt-PT',
 };
-
-
-function DateInputWithPicker({
-  value, onChange, min,
-}: { value: string; onChange: (v: string) => void; min: string }) {
-  const textRef = useRef<HTMLInputElement>(null);
-  const [text, setText] = useState('');
-
-  // Sync display quand la valeur ISO change depuis l'extérieur (calendrier)
-  useEffect(() => {
-    const display = value ? value.split('-').reverse().join('/') : '';
-    setText(display);
-  }, [value]);
-
-  const handleText = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const cursorPos = e.target.selectionStart || 0;
-
-    // Extraire les chiffres et reformater
-    let digits = raw.replace(/\D/g, '').slice(0, 8);
-    let formatted = digits;
-    if (digits.length >= 5) formatted = `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4)}`;
-    else if (digits.length >= 3) formatted = `${digits.slice(0,2)}/${digits.slice(2)}`;
-
-    setText(formatted);
-
-    // Propager au parent quand le format est complet DD/MM/YYYY
-    const m = formatted.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (m) {
-      const iso = `${m[3]}-${m[2]}-${m[1]}`;
-      onChange(iso);
-    }
-
-    // Restaurer la position du curseur
-    requestAnimationFrame(() => {
-      if (textRef.current) {
-        let newPos = cursorPos;
-        const oldDigits = raw.replace(/\D/g, '').length;
-        if (digits.length >= 3 && oldDigits < 3) newPos += 1;
-        if (digits.length >= 5 && oldDigits < 5) newPos += 1;
-        newPos = Math.min(newPos, formatted.length);
-        textRef.current.setSelectionRange(newPos, newPos);
-      }
-    });
-  }, [onChange]);
-
-  return (
-    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
-      {/* Champ texte visible — Saisie Manuelle sans bidi-override */}
-      <input
-        ref={textRef}
-        type="text"
-        inputMode="numeric"
-        placeholder="JJ/MM/AAAA"
-        value={text}
-        onChange={handleText}
-        maxLength={10}
-        style={{ ...inputStyle, paddingRight: 44 }}
-      />
-
-      {/* Conteneur du Calendrier (Combiné visuel + interactif) */}
-      <div style={{
-        position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-        width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>
-        {/* Design Or du bouton (Placé en dessous, insensible aux clics) */}
-        <div style={{
-          position: 'absolute', inset: 0, borderRadius: 8,
-          background: `${G}22`, border: `1px solid ${G}55`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1, pointerEvents: 'none'
-        }}>
-          <Calendar size={16} color={G} />
-        </div>
-
-        {/* Input Date Natif (Placé au-dessus, invisible mais 100% cliquable) */}
-        <input
-          type="date"
-          value={value}
-          min={min}
-          onChange={e => onChange(e.target.value)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            opacity: 0,
-            zIndex: 2,
-            cursor: 'pointer',
-          }}
-        />
-      </div>
-    </div>
-  );
-}
 
 function getDayCount(start: string, end: string): number {
   if (!start || !end) return 0;
@@ -133,121 +31,500 @@ function getDayCount(start: string, end: string): number {
   return Math.max(diff, 0);
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '';
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long' });
+function formatDateBig(dateStr: string, locale: string): { day: string; rest: string } {
+  if (!dateStr) return { day: '', rest: '' };
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.toLocaleDateString(locale, { day: 'numeric', month: 'long' });
+  const weekday = d.toLocaleDateString(locale, { weekday: 'short' }).toUpperCase().replace('.', '');
+  const year = d.getFullYear();
+  return { day, rest: `${weekday} · ${year}` };
 }
 
-export default function DateRangeScreen({ city, startDate, endDate, startTime, endTime, lang, onChange, onTimeChange, onNext, onCityModal, onBack }: Props) {
-  const dayCount = getDayCount(startDate, endDate);
-  const isValid = !!(startDate && endDate && dayCount > 0);
-  const progressPct = 15;
+// ─────────────────────────────────────────────
+// DATE PICKER stylé
+// ─────────────────────────────────────────────
+function DatePickerLuxe({
+  value, onChange, min, locale, placeholder,
+}: { value: string; onChange: (v: string) => void; min: string; locale: string; placeholder: string }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { day, rest } = formatDateBig(value, locale);
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, display: 'flex', flexDirection: 'column', maxWidth: 430, margin: '0 auto' }}>
+    <div style={{ position: 'relative', width: '100%' }}>
+      <input
+        ref={inputRef}
+        type="date"
+        value={value}
+        min={min}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          position: 'absolute', inset: 0, opacity: 0,
+          cursor: 'pointer', width: '100%', height: '100%',
+          WebkitAppearance: 'none', appearance: 'none',
+        }}
+      />
+      <div
+        onClick={() => inputRef.current?.showPicker?.()}
+        style={{
+          padding: '14px 16px',
+          background: 'rgba(244,238,223,0.02)',
+          border: '1px solid rgba(214,188,130,0.25)',
+          borderRadius: 14,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+          minHeight: 78,
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {value ? (
+            <>
+              <span style={{
+                fontFamily: 'var(--f-display)',
+                fontStyle: 'italic',
+                fontSize: 22,
+                color: 'var(--accent)',
+                letterSpacing: '-0.02em',
+                lineHeight: 1,
+              }}>
+                {day}
+              </span>
+              <span style={{
+                fontFamily: 'var(--f-mono)',
+                fontSize: 9,
+                color: 'var(--text-muted)',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+              }}>
+                {rest}
+              </span>
+            </>
+          ) : (
+            <span style={{
+              fontFamily: 'var(--f-display)',
+              fontStyle: 'italic',
+              fontSize: 16,
+              color: 'var(--text-faint)',
+            }}>
+              {placeholder}
+            </span>
+          )}
+        </div>
+        <Calendar
+          size={16}
+          color="var(--accent)"
+          strokeWidth={1.8}
+          style={{ flexShrink: 0, opacity: 0.7 }}
+        />
+      </div>
+    </div>
+  );
+}
 
-      <div style={{ padding: '20px 20px 0', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ fontFamily: 'var(--f-logo)', fontSize: 28, color: G }}>Your Trip</span>
-          <button onClick={onCityModal} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer' }}>
-            <MapPin size={16} color={G} />
-            <span style={{ fontFamily: 'var(--f-display)', fontSize: 18, fontWeight: 600, color: G }}>{city}</span>
-          </button>
-        </div>
-        <div style={{ height: 3, background: '#333', borderRadius: 2, overflow: 'hidden', marginBottom: 20 }}>
-          <div style={{ height: '100%', width: `${progressPct}%`, background: G, borderRadius: 2, transition: 'width 400ms' }} />
-        </div>
+// ─────────────────────────────────────────────
+// TIME PICKER stylé
+// ─────────────────────────────────────────────
+function TimePickerLuxe({
+  value, onChange,
+}: { value: string; onChange: (v: string) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      <input
+        ref={inputRef}
+        type="time"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          position: 'absolute', inset: 0, opacity: 0,
+          cursor: 'pointer', width: '100%', height: '100%',
+          WebkitAppearance: 'none', appearance: 'none',
+        }}
+      />
+      <div
+        onClick={() => inputRef.current?.showPicker?.()}
+        style={{
+          padding: '14px 16px',
+          background: 'rgba(244,238,223,0.02)',
+          border: '1px solid rgba(214,188,130,0.25)',
+          borderRadius: 14,
+          cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          minHeight: 56,
+        }}
+      >
+        <span style={{
+          fontFamily: 'var(--f-display)',
+          fontStyle: 'italic',
+          fontSize: 22,
+          color: 'var(--accent)',
+          letterSpacing: '-0.02em',
+        }}>
+          {value || '--:--'}
+        </span>
+        <Clock4 size={16} color="var(--accent)" strokeWidth={1.8} style={{ opacity: 0.7 }} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// SCREEN PRINCIPAL
+// ─────────────────────────────────────────────
+export default function DateRangeScreen({
+  city, startDate, endDate, startTime, endTime,
+  onChange, onTimeChange, onNext, onCityModal, onBack,
+}: Props) {
+  const { t, lang } = useLang();
+  const locale = LOCALE_MAP[lang] || 'en-GB';
+
+  const dayCount = getDayCount(startDate, endDate);
+  const isOverLimit = dayCount > MAX_DAYS;
+  const isValid = !!(startDate && endDate && dayCount > 0 && !isOverLimit);
+
+  const hourSpan = (() => {
+    if (!startTime || !endTime) return 0;
+    const [sh, sm] = startTime.split(':').map(Number);
+    const [eh, em] = endTime.split(':').map(Number);
+    return (eh * 60 + em - sh * 60 - sm) / 60;
+  })();
+
+  const [wasClamped, setWasClamped] = useState(false);
+  useEffect(() => {
+    if (!wasClamped) return;
+    const id = setTimeout(() => setWasClamped(false), 5000);
+    return () => clearTimeout(id);
+  }, [wasClamped]);
+
+  return (
+    <div style={{
+      minHeight: '100vh', background: 'var(--bg)',
+      display: 'flex', flexDirection: 'column',
+      maxWidth: 430, margin: '0 auto',
+      fontFamily: 'var(--f-body)',
+    }}>
+
+      <AppHeader subtitle={t('step_1')} />
+
+      {/* ── PROGRESS BAR 4 segments ── */}
+      <div style={{
+        display: 'flex', gap: 6, padding: '0 20px 18px', flexShrink: 0,
+      }}>
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} style={{
+            flex: 1,
+            height: 3,
+            background: i === 0 ? 'var(--accent)' : 'rgba(244,238,223,0.10)',
+            borderRadius: 999,
+            transition: 'background 300ms',
+          }} />
+        ))}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 32px' }}>
 
-        <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', marginBottom: 14, paddingTop: 4 }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke={G} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span style={{ fontFamily: 'var(--f-display)', fontSize: 14, color: G }}>{t('back', lang)}</span>
-        </button>
+        {/* Retour + Destination pill */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          marginBottom: 24,
+        }}>
+          <button onClick={onBack} style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text-muted)',
+            fontFamily: 'var(--f-body)', fontSize: 15,
+            padding: 0,
+          }}>
+            <ChevronLeft size={18} strokeWidth={1.8} />
+            {t('back')}
+          </button>
 
-        <div style={{ display: 'inline-block', background: G, borderRadius: 20, padding: '6px 18px', marginBottom: 20 }}>
-          <span style={{ fontFamily: 'var(--f-display)', fontSize: 14, fontWeight: 600, color: BG }}>{t('step_1', lang)}</span>
+          <button onClick={onCityModal} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '7px 14px', borderRadius: 999,
+            background: 'rgba(214,188,130,0.06)',
+            border: '1px solid rgba(214,188,130,0.45)',
+            color: 'var(--accent)',
+            fontFamily: 'var(--f-body)',
+            fontSize: 13, fontWeight: 600,
+            cursor: 'pointer',
+          }}>
+            <MapPin size={13} strokeWidth={2} />
+            {city}
+          </button>
         </div>
 
-        <h1 style={{ fontFamily: 'var(--f-display)', fontSize: 28, fontWeight: 700, color: G, marginBottom: 8, lineHeight: 1.2 }}>
-          {t('when', lang)}<br />
-          <span style={{ color: G, opacity: 0.75 }}>{t('when_title_2', lang)}</span>
-        </h1>
-        <p style={{ fontFamily: 'var(--f-display)', fontSize: 14, color: '#888', marginBottom: 28 }}>
-          {t('when_desc', lang)}
+        {/* Eyebrow */}
+        <p style={{
+          fontFamily: 'var(--f-mono)',
+          fontSize: 11,
+          color: 'var(--text-muted)',
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          margin: '0 0 14px',
+        }}>
+          {t('step_1')}
         </p>
 
-        <div style={{ border: `2px solid ${G}`, borderRadius: 14, padding: '18px 16px', marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${G}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Calendar size={18} color={G} />
+        {/* Titre */}
+        <h2 style={{
+          fontFamily: 'var(--f-display)',
+          fontStyle: 'italic',
+          fontSize: 40,
+          fontWeight: 400,
+          color: 'var(--text)',
+          letterSpacing: '-0.025em',
+          lineHeight: 1.05,
+          margin: '0 0 16px',
+        }}>
+          {t('when')}{' '}
+          <span style={{ color: 'var(--accent)' }}>{t('when_title_2')}</span>
+        </h2>
+
+        <p style={{
+          fontSize: 15,
+          color: 'var(--text-muted)',
+          lineHeight: 1.55,
+          margin: '0 0 28px',
+        }}>
+          {t('when_desc')}
+        </p>
+
+        {/* CARD PÉRIODE */}
+        <div style={{
+          background: 'var(--bg-soft)',
+          border: '1px solid rgba(214,188,130,0.18)',
+          borderRadius: 20,
+          padding: 18,
+          marginBottom: 18,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: 'linear-gradient(135deg, #2A2218 0%, #14110A 100%)',
+              border: '1px solid rgba(212,168,67,0.20)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Calendar size={20} color="var(--accent)" strokeWidth={1.8} />
             </div>
-            <span style={{ fontFamily: 'var(--f-display)', fontSize: 16, fontWeight: 700, color: G }}>{t('travel_period', lang)}</span>
+            <p style={{
+              fontSize: 18, fontWeight: 600,
+              color: 'var(--text)',
+              margin: 0,
+              letterSpacing: '-0.01em',
+            }}>
+              {t('travel_period')}
+            </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div>
-              <label style={{ fontFamily: 'var(--f-display)', fontSize: 12, color: G, display: 'block', marginBottom: 6 }}>{t('arrival', lang)}</label>
-              <DateInputWithPicker value={startDate} onChange={val => onChange(val, endDate && val > endDate ? val : endDate)} min={new Date().toISOString().split('T')[0]} />
-              {startDate && <p style={{ fontSize: 11, color: G, opacity: 0.7, marginTop: 4 }}>{formatDate(startDate)}</p>}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+            <div style={{ minWidth: 0 }}>
+              <label style={{
+                fontFamily: 'var(--f-mono)',
+                fontSize: 10,
+                color: 'var(--text-muted)',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                display: 'block', marginBottom: 8,
+              }}>
+                {t('arrival')}
+              </label>
+              <DatePickerLuxe
+                value={startDate}
+                onChange={val => onChange(val, endDate && val > endDate ? val : endDate)}
+                min={new Date().toISOString().split('T')[0]}
+                locale={locale}
+                placeholder={t('date_placeholder')}
+              />
             </div>
-            <div>
-              <label style={{ fontFamily: 'var(--f-display)', fontSize: 12, color: G, display: 'block', marginBottom: 6 }}>{t('departure', lang)}</label>
-              <DateInputWithPicker value={endDate} onChange={val => onChange(startDate, val)} min={startDate || new Date().toISOString().split('T')[0]} />
-              {endDate && <p style={{ fontSize: 11, color: G, opacity: 0.7, marginTop: 4 }}>{formatDate(endDate)}</p>}
+            <div style={{ minWidth: 0 }}>
+              <label style={{
+                fontFamily: 'var(--f-mono)',
+                fontSize: 10,
+                color: 'var(--text-muted)',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                display: 'block', marginBottom: 8,
+              }}>
+                {t('departure')}
+              </label>
+              <DatePickerLuxe
+                value={endDate}
+                onChange={val => {
+                  if (startDate && val) {
+                    const start = new Date(startDate);
+                    const end = new Date(val);
+                    const diff = Math.floor((end.getTime() - start.getTime()) / 86400000) + 1;
+                    if (diff > MAX_DAYS) {
+                      const maxDate = new Date(start);
+                      maxDate.setDate(maxDate.getDate() + MAX_DAYS - 1);
+                      onChange(startDate, maxDate.toISOString().split('T')[0]);
+                      setWasClamped(true);
+                      return;
+                    }
+                  }
+                  onChange(startDate, val);
+                }}
+                min={startDate || new Date().toISOString().split('T')[0]}
+                locale={locale}
+                placeholder={t('date_placeholder')}
+              />
             </div>
           </div>
 
           {isValid && (
-            <div style={{ background: `${G}18`, border: `1px solid ${G}44`, borderRadius: 8, padding: '10px 14px' }}>
-              <span style={{ fontFamily: 'var(--f-display)', fontSize: 14, color: G }}>
-                <strong>{dayCount}</strong> {t('day_count', lang)}{dayCount > 1 ? 's' : ''}{t('day_count_desc', lang)}
+            <div style={{
+              background: 'rgba(214,188,130,0.05)',
+              border: '1px solid rgba(214,188,130,0.15)',
+              borderRadius: 12,
+              padding: '12px 14px',
+            }}>
+              <span style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                <strong style={{ color: 'var(--accent)' }}>{dayCount}</strong>{' '}
+                {dayCount > 1 ? t('days') : t('day_count')}{t('day_count_desc')}
+              </span>
+            </div>
+          )}
+          {isOverLimit && (
+            <div style={{
+              background: 'rgba(197,123,94,0.10)',
+              border: '1px solid rgba(197,123,94,0.40)',
+              borderRadius: 12,
+              padding: '12px 14px',
+              marginTop: 8,
+            }}>
+              <span style={{ fontSize: 13, color: '#E0A37A', lineHeight: 1.5 }}>
+                ⚠ {t('max_days_warning')}
+              </span>
+            </div>
+          )}
+          {wasClamped && (
+            <div style={{
+              background: 'rgba(123,149,176,0.10)',
+              border: '1px solid rgba(123,149,176,0.40)',
+              borderRadius: 12,
+              padding: '12px 14px',
+              marginTop: 8,
+            }}>
+              <span style={{ fontSize: 13, color: '#9DB4CC', lineHeight: 1.5 }}>
+                ℹ {t('max_days_warning')}
               </span>
             </div>
           )}
         </div>
 
-        <div style={{ border: `2px solid ${G}`, borderRadius: 14, padding: '18px 16px', marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${G}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Clock4 size={18} color={G} />
+        {/* CARD HORAIRES */}
+        <div style={{
+          background: 'var(--bg-soft)',
+          border: '1px solid rgba(214,188,130,0.18)',
+          borderRadius: 20,
+          padding: 18,
+          marginBottom: 24,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 18 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: 'linear-gradient(135deg, #2A2218 0%, #14110A 100%)',
+              border: '1px solid rgba(212,168,67,0.20)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Clock4 size={20} color="var(--accent)" strokeWidth={1.8} />
             </div>
-            <div>
-              <span style={{ fontFamily: 'var(--f-display)', fontSize: 16, fontWeight: 700, color: G, display: 'block' }}>{t('schedule', lang)}</span>
-              <span style={{ fontFamily: 'var(--f-display)', fontSize: 11, color: '#888' }}>{t('schedule_desc', lang)}</span>
+            <div style={{ flex: 1 }}>
+              <p style={{
+                fontSize: 18, fontWeight: 600,
+                color: 'var(--text)',
+                margin: 0, letterSpacing: '-0.01em',
+              }}>
+                {t('schedule')}
+              </p>
+              <p style={{
+                fontSize: 13, color: 'var(--text-muted)',
+                margin: '3px 0 0', lineHeight: 1.4,
+              }}>
+                {t('schedule_desc')}
+              </p>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-            <div>
-              <label style={{ fontFamily: 'var(--f-display)', fontSize: 12, color: G, display: 'block', marginBottom: 6 }}>{t('start', lang)}</label>
-              <input type="time" value={startTime} onChange={e => onTimeChange(e.target.value, endTime)} style={inputStyle} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+            <div style={{ minWidth: 0 }}>
+              <label style={{
+                fontFamily: 'var(--f-mono)',
+                fontSize: 10,
+                color: 'var(--text-muted)',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                display: 'block', marginBottom: 8,
+              }}>
+                {t('start')}
+              </label>
+              <TimePickerLuxe
+                value={startTime}
+                onChange={v => onTimeChange(v, endTime)}
+              />
             </div>
-            <div>
-              <label style={{ fontFamily: 'var(--f-display)', fontSize: 12, color: G, display: 'block', marginBottom: 6 }}>{t('end', lang)}</label>
-              <input type="time" value={endTime} onChange={e => onTimeChange(startTime, e.target.value)} style={inputStyle} />
+            <div style={{ minWidth: 0 }}>
+              <label style={{
+                fontFamily: 'var(--f-mono)',
+                fontSize: 10,
+                color: 'var(--text-muted)',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                display: 'block', marginBottom: 8,
+              }}>
+                {t('end')}
+              </label>
+              <TimePickerLuxe
+                value={endTime}
+                onChange={v => onTimeChange(startTime, v)}
+              />
             </div>
           </div>
 
           {startTime && endTime && (
-            <div style={{ background: `${G}18`, border: `1px solid ${G}44`, borderRadius: 8, padding: '10px 14px' }}>
-              <span style={{ fontFamily: 'var(--f-display)', fontSize: 14, color: G }}>
-                {t('schedule_fill', lang)} {startTime} — {endTime}
+            <div style={{
+              background: 'rgba(214,188,130,0.05)',
+              border: '1px solid rgba(214,188,130,0.15)',
+              borderRadius: 12,
+              padding: '12px 14px',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <Sparkles size={14} color="var(--accent)" strokeWidth={2} style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                <strong style={{ color: 'var(--accent)' }}>{Math.round(hourSpan)}{t('schedule_hours_short')}</strong>{' '}
+                {t('schedule_fill')}
               </span>
             </div>
           )}
         </div>
 
-        <button onClick={onNext} disabled={!isValid} style={{
-          width: '100%', padding: '18px', borderRadius: 40,
-          background: isValid ? G : '#333',
-          border: 'none', cursor: isValid ? 'pointer' : 'default',
-          fontFamily: 'var(--f-display)', fontSize: 22, fontWeight: 700,
-          color: isValid ? BG : '#666',
-          transition: 'background 200ms',
-        }}>
-          {t('continue', lang)}
+        <button
+          onClick={onNext}
+          disabled={!isValid}
+          style={{
+            width: '100%',
+            padding: '18px 24px',
+            background: isValid ? 'var(--grad-logo)' : 'rgba(244,238,223,0.06)',
+            color: isValid ? '#1A1208' : 'var(--text-faint)',
+            border: 'none',
+            borderRadius: 999,
+            fontFamily: 'var(--f-body)',
+            fontSize: 17, fontWeight: 700,
+            cursor: isValid ? 'pointer' : 'not-allowed',
+            boxShadow: isValid ? '0 10px 32px rgba(212,168,67,0.28), inset 0 1px 0 rgba(255,255,255,0.25)' : 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            letterSpacing: '-0.005em',
+            transition: 'all 200ms ease',
+          }}
+        >
+          {t('continue')}
+          <ArrowRight size={18} strokeWidth={2.2} />
         </button>
       </div>
     </div>

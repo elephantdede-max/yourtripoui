@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import type { LangCode } from '../lib/i18n';
-import { t } from '../lib/i18n';
+import { useLang } from '../lib/lang-context';
 
 const G = '#C9A961';
 const BG = '#000000';
@@ -13,7 +13,8 @@ interface Props {
   lang?: LangCode;
 }
 
-export default function Tooltip({ title, description, className = '', lang = 'fr' }: Props) {
+export default function Tooltip({ title, description, className = '' }: Props) {
+  const { t } = useLang();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -62,7 +63,7 @@ export default function Tooltip({ title, description, className = '', lang = 'fr
                 fontFamily: 'var(--f-display)', fontSize: 15, fontWeight: 700, color: BG,
               }}
             >
-              {t('understood', lang)}
+              {t('understood')}
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { Plane } from 'lucide-react';
 import { useLang } from '../lib/lang-context';
+import Logo from './Logo';
 
 interface Props {
   onStart: () => void;
@@ -21,18 +22,16 @@ export default function LandingScreen({ onStart }: Props) {
         <Plane size={140} color={G} strokeWidth={1} style={{ transform:'rotate(45deg)' }} fill={G} />
         <div style={{
           position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
-          width:48, height:48, borderRadius:'50%',
-          background:'var(--bg)', border:`2px solid #0A0A0F`,
-          display:'flex', alignItems:'center', justifyContent:'center',
         }}>
-          <span style={{ fontFamily:'var(--f-logo)', fontSize:18, color:G }}>YT</span>
+          <Logo.Icon size={56} />
         </div>
       </div>
 
       {/* Logo cursif */}
-      <h1 style={{ fontFamily:'var(--f-logo)', fontSize:48, color:G, marginBottom:24 }}>
-        Your Trip
-      </h1>
+      <div style={{ marginBottom: 24 }}>
+        <Logo.Wordmark size={48} />
+      </div>
+       
 
       {/* Slogan */}
       <p style={{ fontFamily:'var(--f-display)', fontSize:22, color:G, textAlign:'center', marginBottom:48 }}>
